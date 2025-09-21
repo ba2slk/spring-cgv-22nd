@@ -28,8 +28,9 @@ public class Movie {
     @Builder.Default
     private Long totalView = 0L;
 
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private String rating = "ALL";
+    private MovieRatingType rating = MovieRatingType.ALL;
 
     @Builder.Default
     private Double star = 0.0;
