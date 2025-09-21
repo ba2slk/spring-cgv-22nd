@@ -1,8 +1,7 @@
 package com.ceos22.cgvclone.domain.user;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -12,21 +11,21 @@ import java.util.UUID;
 @Table(name = "users")
 @Entity
 @Getter
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
     @UuidGenerator
-    @Column(name = "uuid", columnDefinition = "BINARY(16)", updatable = false, nullable = false)
+    @Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false)
     private UUID uuid;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    // 서비스 계층에서 반드시 Hash 처리
     @Column(nullable = false)
     private String password;
 
@@ -37,11 +36,4 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    public User(String email, String password, String name, String phoneNumber) {
-        this.email = email;
-        this.password = password;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-    }
 }
