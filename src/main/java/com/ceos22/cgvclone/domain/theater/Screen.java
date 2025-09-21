@@ -17,7 +17,9 @@ public class Screen {
     @JoinColumn(name = "theater_id")
     private Theater theater;
 
-    private String type; // TODO: 일반관, 특별관 관리 전략
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private ScreenType type = ScreenType.NORMAL;
 
     private String name;
 }
