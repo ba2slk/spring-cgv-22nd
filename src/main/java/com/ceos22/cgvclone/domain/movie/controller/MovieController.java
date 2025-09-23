@@ -29,14 +29,14 @@ public class MovieController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "releaseDate") String sortBy
-    ) {
+    ){
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
         List<MovieListDTO> movies = movieService.getMovies(status, pageable);
         return ResponseEntity.ok(movies);
     }
 
     /* 영화 상세 조회 */
-    @GetMapping("api/movies/{movieId}")
+    @GetMapping("api/movie/{movieId}")
     public ResponseEntity<MovieDetailsDTO> getMovie(
             @PathVariable Long movieId
     ){
