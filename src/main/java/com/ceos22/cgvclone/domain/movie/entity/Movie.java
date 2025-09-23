@@ -1,6 +1,7 @@
 package com.ceos22.cgvclone.domain.movie.entity;
 
 import com.ceos22.cgvclone.domain.movie.enums.MovieRatingType;
+import com.ceos22.cgvclone.domain.movie.enums.MovieStatusType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,4 +35,11 @@ public class Movie {
 
     @Builder.Default
     private Double star = 0.0;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private MovieStatusType status = MovieStatusType.COMING;
+
+    @Column(nullable = false)
+    private String image;
 }
