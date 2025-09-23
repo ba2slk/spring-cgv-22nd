@@ -2,13 +2,13 @@ package com.ceos22.cgvclone.domain.movie.entity;
 
 import com.ceos22.cgvclone.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Table(
         name = "movie_likes",
         uniqueConstraints = {
