@@ -1,6 +1,7 @@
 package com.ceos22.cgvclone.domain.movie.entity;
 
 import com.ceos22.cgvclone.domain.movie.enums.GenreType;
+import com.ceos22.cgvclone.domain.movie.enums.MovieStatusType;
 import jakarta.persistence.*;
 import lombok.*;
 
