@@ -32,6 +32,7 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
 
+    /* 영화 상세 조회 */
     @Transactional(readOnly = true)
     public MovieDetailsDTO getMovie(Long movieId){
         Optional<Movie> movie = movieRepository.findById(movieId);
