@@ -1,5 +1,6 @@
 package com.ceos22.cgvclone.domain.reservation;
 
+import com.ceos22.cgvclone.domain.common.BaseTimeEntity;
 import com.ceos22.cgvclone.domain.theater.Showtime;
 import com.ceos22.cgvclone.domain.user.User;
 import jakarta.persistence.*;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Reservation {
+public class Reservation extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,8 +32,4 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Showtime showtime;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
 }

@@ -1,5 +1,6 @@
 package com.ceos22.cgvclone.domain.user;
 
+import com.ceos22.cgvclone.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,7 +34,4 @@ public class User {
     private String name;
 
     private String phoneNumber;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
 }
