@@ -1,9 +1,6 @@
 package com.ceos22.cgvclone.domain.movie;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -16,5 +13,7 @@ public class Genre {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String type; // TODO: Genre 관리 전략
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private GenreType type = GenreType.UNKNOWN;
 }
