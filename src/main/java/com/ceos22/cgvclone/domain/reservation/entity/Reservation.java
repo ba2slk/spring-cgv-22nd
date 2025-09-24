@@ -1,6 +1,7 @@
 package com.ceos22.cgvclone.domain.reservation.entity;
 
 import com.ceos22.cgvclone.domain.common.BaseTimeEntity;
+import com.ceos22.cgvclone.domain.reservation.enums.ReservationStatusType;
 import com.ceos22.cgvclone.domain.theater.entity.Showtime;
 import com.ceos22.cgvclone.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -25,9 +26,17 @@ public class Reservation extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User User;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Showtime showtime;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private ReservationStatusType status = ReservationStatusType.RESERVED;
+
+    public void cancel() {
+        this.status = ReservationStatusType.CANCELED;
+    }
 }
