@@ -32,5 +32,12 @@ public class UserOrder extends BaseTimeEntity {
     private Theater theater;
 
     @Builder.Default
-    private Long total_price = 0L;
+    private Long totalPrice = 0L;
+
+    public void setTotalPrice(long totalPrice) {
+        if (totalPrice < 0) {
+            throw new IllegalArgumentException("최종 결제 금액은 0보다 작을 수 없습니다.");
+        }
+        this.totalPrice = totalPrice;
+    }
 }

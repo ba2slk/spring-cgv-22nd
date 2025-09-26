@@ -1,17 +1,17 @@
 package com.ceos22.cgvclone.domain.snack.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Table(
         name = "order_items",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"order_id", "product_id"})
+                @UniqueConstraint(columnNames = {"order_id", "item_id"})
         }
 )
 public class OrderItem {
@@ -24,8 +24,8 @@ public class OrderItem {
     private UserOrder order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
 
     private int quantity;
 

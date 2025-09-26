@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Table(
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"theater_id", "product_id"})
+                @UniqueConstraint(columnNames = {"theater_id", "item_id"})
         }
 )
 public class Inventory {
@@ -24,6 +24,20 @@ public class Inventory {
     private Theater theater;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
+
+    @Column(nullable = false)
+    private Boolean isAvailable = true;
+
+    @Builder.Default
+    private int quantity = 0;
+
+    // 재고 수량 조정
+    public void setQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new IllegalStateException("재고는 0보다 작을 수 없습니다.");
+        }
+        this.quantity = quantity;
+    }
 }

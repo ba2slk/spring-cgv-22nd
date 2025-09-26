@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class Product {
+public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,5 +20,7 @@ public class Product {
     private String vendor;
 
     @Column(nullable = false)
-    private String price;
+    private int price;
+
+    private String image;
 }
