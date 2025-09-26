@@ -35,7 +35,7 @@ public class UserOrderService {
         List<Inventory> inventories = inventoryRepository.findAllByTheaterId(theaterId);
 
         return inventories.stream()
-                .map(inv -> ItemListDTO.from(inv.getItem(), inv.getIsAvailable(), inv.getQuantity()))
+                .map(ItemListDTO::fromInventory)
                 .toList();
     }
 
@@ -89,7 +89,7 @@ public class UserOrderService {
         userOrder.setTotalPrice(totalPrice);
 
         List<ItemListDTO> itemInfo = orderItems.stream()
-                .map(orderItem -> ItemListDTO.from(orderItem.getItem(), true, orderItem.getQuantity()))
+                .map(ItemListDTO::fromOrderItem)
                 .toList();
 
         return UserOrderResponseDTO.of(userOrder.getUuid(), itemInfo, totalPrice, theaterId);
