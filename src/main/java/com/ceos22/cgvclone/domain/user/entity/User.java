@@ -1,6 +1,7 @@
 package com.ceos22.cgvclone.domain.user.entity;
 
 import com.ceos22.cgvclone.domain.common.BaseTimeEntity;
+import com.ceos22.cgvclone.domain.user.enums.UserRoleType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -32,4 +33,8 @@ public class User extends BaseTimeEntity {
     private String name;
 
     private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private UserRoleType role = UserRoleType.CUSTOMER;
 }
