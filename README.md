@@ -59,6 +59,11 @@ v2.0 (Latest)
 5. OrderItem
 	- 구체적인 주문 명세로, Order와 Item 간의 N:M 관계를 해소하기 위해 도입
 ---
+# API Endpoints
+<img width="1438" height="1305" alt="image" src="https://github.com/user-attachments/assets/abed7b23-8e26-462a-a5b9-f73d01868259" />
+
+
+---
 # 인증/인가: 4가지 방법  
 ## 1. 세션 & 쿠키
 ### 시나리오
