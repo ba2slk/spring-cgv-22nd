@@ -49,6 +49,15 @@ v2.0 (Latest)
 		- 같은 좌석이라도 상영 시간에 따라 다른 상품으로 보아야 하기 때문이다.
 	- 이러한 N:M 관계를 해소하기 위해 도입
 	- 구매/취소의 경우 모두 `ReservationSeat` 엔터티를 통해 관리할 수 있다.
+### Snack
+1. UserOrder
+	- User의 주문 정보
+3. Inventory
+	- Theater와 Item 간의 N:M 관계를 해소하고 극장 별 재고 관리 확장성을 고려해 추가
+4. Item
+	- 매점 상품 정보
+5. OrderItem
+	- 구체적인 주문 명세로, Order와 Item 간의 N:M 관계를 해소하기 위해 도입
 ---
 # 인증/인가: 4가지 방법  
 ## 1. 세션 & 쿠키
