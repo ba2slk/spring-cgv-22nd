@@ -18,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +31,9 @@ public class ReservationService {
 
     /* 예매 */
     @Transactional
-    public ReservationResponseDTO createReservation(ReservationRequestDTO reservationRequestDTO, Long userId) {  // TODO: Spring Security 기반 User 정보 획득
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public ReservationResponseDTO createReservation(ReservationRequestDTO reservationRequestDTO, String email) {  // TODO: Spring Security 기반 User 정보 획득
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
 
         Showtime showtime = showtimeRepository.findById(reservationRequestDTO.showtimeId())
                 .orElseThrow(() -> new IllegalArgumentException("Showtime not found: " + reservationRequestDTO.showtimeId()));
@@ -80,11 +78,11 @@ public class ReservationService {
 
     /* 예매 취소 */
     @Transactional
-    public ReservationResponseDTO cancelReservation (ReservationCancelDTO reservationCancelDTO, Long userId) {  // TODO: Spring Security 기반 User 정보 획득
+    public ReservationResponseDTO cancelReservation (ReservationCancelDTO reservationCancelDTO, String email) {  // TODO: Spring Security 기반 User 정보 획득
         Reservation reservation = reservationRepository.findByUuid(reservationCancelDTO.uuid())
                 .orElseThrow(()->new IllegalArgumentException("Reservation not found: " + reservationCancelDTO.uuid()));
 
-        if (!reservation.getUser().getId().equals(userId)) {
+        if (!reservation.getUser().getEmail().equals(email)) {
             throw new IllegalStateException("이미 취소된 예매 건입니다.");
         }
 

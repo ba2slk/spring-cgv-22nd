@@ -1,8 +1,5 @@
 package com.ceos22.cgvclone.domain.theater.service;
 
-import com.ceos22.cgvclone.domain.movie.entity.MovieLike;
-import com.ceos22.cgvclone.domain.movie.repository.MovieLikeRepository;
-import com.ceos22.cgvclone.domain.movie.repository.MovieRepository;
 import com.ceos22.cgvclone.domain.theater.entity.Theater;
 import com.ceos22.cgvclone.domain.theater.entity.TheaterLike;
 import com.ceos22.cgvclone.domain.theater.repository.TheaterLikeRepository;
