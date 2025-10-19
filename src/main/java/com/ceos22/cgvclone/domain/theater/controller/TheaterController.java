@@ -34,7 +34,7 @@ public class TheaterController {
     }
 
     /* 영화관 상세 조회 */
-    @GetMapping("/api/theater/{theaterId}")
+    @GetMapping("/api/theaters/{theaterId}")
     public ResponseEntity<TheaterDetailsDTO> getTheater(
             @PathVariable Long theaterId
     ){
