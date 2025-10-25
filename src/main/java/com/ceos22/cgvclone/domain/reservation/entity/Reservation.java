@@ -34,7 +34,7 @@ public class Reservation extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private ReservationStatusType status = ReservationStatusType.RESERVED;
+    private ReservationStatusType status = ReservationStatusType.PENDING;
 
     public void cancel() {
         this.status = ReservationStatusType.CANCELED;
