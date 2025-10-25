@@ -1,0 +1,125 @@
+2025-10-25 21:09:17.496 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2025-10-25 21:09:17.543 [main] INFO  c.c.cgvclone.CgvcloneApplication - Starting CgvcloneApplication using Java 17.0.14 with PID 10352 (C:\Users\Seungsik Bae\Documents\Sogang\CEOS\Projects\spring-cgv-22nd\build\classes\java\main started by Seungsik Bae in C:\Users\Seungsik Bae\Documents\Sogang\CEOS\Projects\spring-cgv-22nd)
+2025-10-25 21:09:17.543 [main] DEBUG c.c.cgvclone.CgvcloneApplication - Running with Spring Boot v3.5.5, Spring v6.2.10
+2025-10-25 21:09:17.544 [main] INFO  c.c.cgvclone.CgvcloneApplication - No active profile set, falling back to 1 default profile: "default"
+2025-10-25 21:09:18.361 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-10-25 21:09:18.456 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 78 ms. Found 15 JPA repository interfaces.
+2025-10-25 21:09:18.650 [main] INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=817e050f-f863-3f7d-a663-b5ab407f1e0f
+2025-10-25 21:09:19.148 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-10-25 21:09:19.162 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-10-25 21:09:19.164 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-10-25 21:09:19.164 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.44]
+2025-10-25 21:09:19.232 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-10-25 21:09:19.232 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1651 ms
+2025-10-25 21:09:19.439 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-10-25 21:09:19.479 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.26.Final
+2025-10-25 21:09:19.506 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-10-25 21:09:19.762 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-10-25 21:09:19.786 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-10-25 21:09:20.018 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@10b3ea72
+2025-10-25 21:09:20.020 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-10-25 21:09:20.057 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-10-25 21:09:20.058 [main] WARN  org.hibernate.orm.deprecation - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-10-25 21:09:20.074 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-10-25 21:09:21.199 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-10-25 21:09:21.369 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-10-25 21:09:21.693 [main] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-10-25 21:09:21.920 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-10-25 21:09:22.090 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-10-25 21:09:22.831 [main] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - 27 mappings in 'requestMappingHandlerMapping'
+2025-10-25 21:09:22.857 [main] DEBUG o.s.w.s.h.SimpleUrlHandlerMapping - Patterns [/swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
+2025-10-25 21:09:22.935 [main] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-10-25 21:09:22.978 [main] DEBUG o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 2 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-10-25 21:09:23.385 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-10-25 21:09:23.402 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2025-10-25 21:09:23.479 [main] INFO  c.c.cgvclone.CgvcloneApplication - Started CgvcloneApplication in 6.567 seconds (process running for 7.141)
+2025-10-25 21:09:44.181 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-10-25 21:09:44.182 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-10-25 21:09:44.182 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-10-25 21:09:44.182 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-10-25 21:09:44.185 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-10-25 21:09:44.189 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@4efca68
+2025-10-25 21:09:44.189 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@267e36f5
+2025-10-25 21:09:44.190 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2025-10-25 21:09:44.190 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 8 ms
+2025-10-25 21:09:44.270 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/theaters/1/snacks/items", parameters={}
+2025-10-25 21:09:44.275 [http-nio-8080-exec-1] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.ceos22.cgvclone.domain.snack.controller.UserOrderController#getItems(Long)
+2025-10-25 21:09:44.330 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ======== HTTP REQUEST [START] ========
+2025-10-25 21:09:44.330 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ==> URI: [GET]/api/theaters/1/snacks/items
+2025-10-25 21:09:44.330 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ==> IP: 0:0:0:0:0:0:0:1
+2025-10-25 21:09:44.330 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ==> Controller: UserOrderController.getItems
+2025-10-25 21:09:44.330 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ==> Params: 1
+2025-10-25 21:09:44.553 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        i1_0.id,
+        i1_0.is_available,
+        i1_0.item_id,
+        i2_0.id,
+        i2_0.image,
+        i2_0.name,
+        i2_0.price,
+        i2_0.vendor,
+        i1_0.quantity,
+        i1_0.theater_id 
+    from
+        inventory i1_0 
+    left join
+        theater t1_0 
+            on t1_0.id=i1_0.theater_id 
+    join
+        item i2_0 
+            on i2_0.id=i1_0.item_id 
+    where
+        t1_0.id=?
+2025-10-25 21:09:44.556 [http-nio-8080-exec-1] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1]
+2025-10-25 21:09:44.659 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ======== HTTP RESPONSE (328ms) ========
+2025-10-25 21:09:44.659 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ==> URI: [GET]/api/theaters/1/snacks/items
+2025-10-25 21:09:44.659 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ==> Response Type: ResponseEntity
+2025-10-25 21:09:44.659 [http-nio-8080-exec-1] INFO  c.c.c.common.aop.LoggingAspect - ========================================
+2025-10-25 21:09:44.735 [http-nio-8080-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2025-10-25 21:09:44.750 [http-nio-8080-exec-1] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[ItemListDTO[itemId=1, itemName=팝콘 (L), price=6000, image=path/to/popcorn.jpg, isAvailable=true, qua (truncated)...]
+2025-10-25 21:09:44.815 [http-nio-8080-exec-1] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-10-25 21:10:00.408 [http-nio-8080-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - GET "/api/theaters/1/snacks/items", parameters={}
+2025-10-25 21:10:00.408 [http-nio-8080-exec-9] DEBUG o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.ceos22.cgvclone.domain.snack.controller.UserOrderController#getItems(Long)
+2025-10-25 21:10:00.409 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ======== HTTP REQUEST [START] ========
+2025-10-25 21:10:00.409 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ==> URI: [GET]/api/theaters/1/snacks/items
+2025-10-25 21:10:00.409 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ==> IP: 0:0:0:0:0:0:0:1
+2025-10-25 21:10:00.409 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ==> Controller: UserOrderController.getItems
+2025-10-25 21:10:00.409 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ==> Params: 1
+2025-10-25 21:10:00.412 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        i1_0.id,
+        i1_0.is_available,
+        i1_0.item_id,
+        i2_0.id,
+        i2_0.image,
+        i2_0.name,
+        i2_0.price,
+        i2_0.vendor,
+        i1_0.quantity,
+        i1_0.theater_id 
+    from
+        inventory i1_0 
+    left join
+        theater t1_0 
+            on t1_0.id=i1_0.theater_id 
+    join
+        item i2_0 
+            on i2_0.id=i1_0.item_id 
+    where
+        t1_0.id=?
+2025-10-25 21:10:00.412 [http-nio-8080-exec-9] TRACE org.hibernate.orm.jdbc.bind - binding parameter (1:BIGINT) <- [1]
+2025-10-25 21:10:00.415 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ======== HTTP RESPONSE (5ms) ========
+2025-10-25 21:10:00.415 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ==> URI: [GET]/api/theaters/1/snacks/items
+2025-10-25 21:10:00.415 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ==> Response Type: ResponseEntity
+2025-10-25 21:10:00.415 [http-nio-8080-exec-9] INFO  c.c.c.common.aop.LoggingAspect - ========================================
+2025-10-25 21:10:00.415 [http-nio-8080-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/yaml]
+2025-10-25 21:10:00.415 [http-nio-8080-exec-9] DEBUG o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [[ItemListDTO[itemId=1, itemName=팝콘 (L), price=6000, image=path/to/popcorn.jpg, isAvailable=true, qua (truncated)...]
+2025-10-25 21:10:00.416 [http-nio-8080-exec-9] DEBUG o.s.web.servlet.DispatcherServlet - Completed 200 OK

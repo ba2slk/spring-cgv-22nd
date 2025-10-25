@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOG_PATH" value="logs"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <!-- Console 출력 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File 출력 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/app.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory> </rollingPolicy>
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 비동기 로깅 -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>102</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <!-- 개발 환경 로깅 -->
+    <springProfile name="local, dev, default">
+        <logger name="com.ceos22.cgvclone" level="DEBUG" />
+
+        <logger name="org.hibernate.SQL" level="DEBUG" />
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" />
+
+        <logger name="org.springframework.web" level="DEBUG" />
+
+        <root level="info">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
+        </root>
+    </springProfile>
+
+    <!-- 운영 환경 로깅 -->
+    <springProfile name="prod">
+        <logger name="com.ceos22.cgvclone" level="INFO" />
+
+        <root level="info">
+            <appender-ref ref="ASYNC_FILE" />
+        </root>
+    </springProfile>
+
+</configuration>
