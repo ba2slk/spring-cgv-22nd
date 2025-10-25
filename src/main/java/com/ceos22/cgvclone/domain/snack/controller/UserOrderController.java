@@ -29,7 +29,7 @@ public class UserOrderController {
     public ResponseEntity<UserOrderResponseDTO> createUserOrder(@RequestBody List<UserOrderRequestDTO> orderList,
                                                                 @PathVariable Long theaterId,
                                                                 @RequestParam Long userId){ // TODO: (임시) -> Spring Security
-        UserOrderResponseDTO response = userOrderService.createUserOrder(orderList, theaterId, userId);
+        UserOrderResponseDTO response = userOrderService.createPendingUserOrder(orderList, theaterId, userId);
         return ResponseEntity.ok(response);
     }
 }

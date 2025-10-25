@@ -2,6 +2,7 @@ package com.ceos22.cgvclone.domain.payment.entity;
 
 import com.ceos22.cgvclone.domain.payment.enums.PaymentStatusType;
 import com.ceos22.cgvclone.domain.reservation.entity.Reservation;
+import com.ceos22.cgvclone.domain.snack.entity.UserOrder;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,9 +21,15 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    // 티켓 예매
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
+    @JoinColumn(name = "reservation_id", unique = true)
     Reservation reservation;
+
+    // 매점 주문
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_order_id", unique = true)
+    private UserOrder userOrder;
 
     @Column(nullable = false, unique = true)
     String paymentId;
@@ -51,6 +58,10 @@ public class Payment {
     LocalDateTime canceledAt;
 
     public void cancel(){
-        this.paymentStatus = PaymentStatusType.CANCELLED;
+        this.paymentStatus = PaymentStatusType.CANCELED;
+    }
+
+    public Payable getPayable() {
+        return (reservation != null) ? reservation : userOrder;
     }
 }

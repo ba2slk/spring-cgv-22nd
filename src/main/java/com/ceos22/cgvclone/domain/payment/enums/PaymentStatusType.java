@@ -1,7 +1,8 @@
 package com.ceos22.cgvclone.domain.payment.enums;
 
 public enum PaymentStatusType {
-    CANCELLED,
+    PENDING,
+    CANCELED,
     PAID,
     ERROR
 }

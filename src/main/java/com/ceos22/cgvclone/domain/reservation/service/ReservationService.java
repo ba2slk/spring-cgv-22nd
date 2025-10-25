@@ -1,5 +1,6 @@
 package com.ceos22.cgvclone.domain.reservation.service;
 
+import com.ceos22.cgvclone.domain.payment.enums.PaymentStatusType;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationCancelDTO;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationRequestDTO;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationResponseDTO;
@@ -110,7 +111,7 @@ public class ReservationService {
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .showtime(showtime)
-                .status(ReservationStatusType.PENDING)
+                .status(PaymentStatusType.PENDING)
                 .uuid(UUID.randomUUID())
                 .totalPrice(totalPrice)
                 .build();
@@ -145,7 +146,7 @@ public class ReservationService {
             throw new IllegalStateException("이미 상영 시작 시간이 지난 예매 건입니다.");
         }
 
-        if (reservation.getStatus() == ReservationStatusType.CANCELED){
+        if (reservation.getStatus() == PaymentStatusType.CANCELED){
             throw new IllegalStateException("이미 취소된 예매 건입니다.");
         }
 

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.userdetails.User;
 
 
 @RestController
@@ -19,14 +20,14 @@ public class ReservationController {
 
     @PostMapping("/api/reservations")
     public ResponseEntity<ReservationPendingDTO> createPendingReservation(@RequestBody ReservationRequestDTO reservationRequestDTO,
-                                                                    @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
+                                                                    @AuthenticationPrincipal User user) {
         ReservationPendingDTO reservation = reservationService.createPendingReservation(reservationRequestDTO, user.getUsername());
         return ResponseEntity.ok(reservation);
     }
 
     @PutMapping("/api/reservations")
     public ResponseEntity<ReservationResponseDTO> cancelReservation(@RequestBody ReservationCancelDTO reservationCancelDTO,
-                                                                    @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
+                                                                    @AuthenticationPrincipal User user) {
         ReservationResponseDTO reservation = reservationService.cancelReservation(reservationCancelDTO, user.getUsername());
         return ResponseEntity.ok(reservation);
     }

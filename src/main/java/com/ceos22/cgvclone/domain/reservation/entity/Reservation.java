@@ -1,6 +1,8 @@
 package com.ceos22.cgvclone.domain.reservation.entity;
 
 import com.ceos22.cgvclone.domain.common.BaseTimeEntity;
+import com.ceos22.cgvclone.domain.payment.entity.Payable;
+import com.ceos22.cgvclone.domain.payment.enums.PaymentStatusType;
 import com.ceos22.cgvclone.domain.reservation.enums.ReservationStatusType;
 import com.ceos22.cgvclone.domain.theater.entity.Showtime;
 import com.ceos22.cgvclone.domain.user.entity.User;
@@ -8,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -16,7 +19,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Reservation extends BaseTimeEntity {
+public class Reservation extends BaseTimeEntity implements Payable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,16 +38,23 @@ public class Reservation extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private ReservationStatusType status = ReservationStatusType.PENDING;
+    private PaymentStatusType status = PaymentStatusType.PENDING;
 
     @Column(nullable = false)
     private BigDecimal totalPrice;
 
-    public void cancel() {
-        this.status = ReservationStatusType.CANCELED;
+    @Override
+    public String getOrderName(){
+        return this.showtime.getMovie().getTitle();
     }
 
+    @Override
+    public void cancel() {
+        this.status = PaymentStatusType.CANCELED;
+    }
+
+    @Override
     public void confirm() {
-        this.status = ReservationStatusType.RESERVED;
+        this.status = PaymentStatusType.PAID;
     }
 }

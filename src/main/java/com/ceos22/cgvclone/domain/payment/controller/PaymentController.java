@@ -27,7 +27,7 @@ public class PaymentController {
     ) {
         try {
             InstantPaymentResponseDTO response = paymentService.confirmPayment(
-                    request.reservationUuid(),
+                    request.payableUuid,
                     user.getUsername()
             );
 
@@ -44,7 +44,7 @@ public class PaymentController {
     }
 
     public record PaymentConfirmRequestDTO(
-            UUID reservationUuid
+            UUID payableUuid
     ){}
 
     /* 결제 취소 */

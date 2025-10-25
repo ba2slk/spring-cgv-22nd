@@ -1,9 +1,12 @@
 package com.ceos22.cgvclone.domain.snack.service;
 
+import com.ceos22.cgvclone.domain.payment.enums.PaymentStatusType;
+import com.ceos22.cgvclone.domain.snack.UserOrderStatusType;
 import com.ceos22.cgvclone.domain.snack.dto.ItemListDTO;
 import com.ceos22.cgvclone.domain.snack.dto.UserOrderRequestDTO;
 import com.ceos22.cgvclone.domain.snack.dto.UserOrderResponseDTO;
 import com.ceos22.cgvclone.domain.snack.entity.Inventory;
+import com.ceos22.cgvclone.domain.snack.entity.Item;
 import com.ceos22.cgvclone.domain.snack.entity.OrderItem;
 import com.ceos22.cgvclone.domain.snack.entity.UserOrder;
 import com.ceos22.cgvclone.domain.snack.repository.InventoryRepository;
@@ -15,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,51 +45,56 @@ public class UserOrderService {
 
     // 주문 정보 생성
     @Transactional
-    public UserOrderResponseDTO createUserOrder(List<UserOrderRequestDTO> orderList, Long theaterId, Long userId) {  // TODO: Spring Security
-        // 이용가능한 재고 목록
-        List<Inventory> inventories = inventoryRepository.findAllByTheaterId(theaterId).stream()
-                .filter(Inventory::getIsAvailable)
+    public UserOrderResponseDTO createPendingUserOrder(
+            List<UserOrderRequestDTO> orderList, Long theaterId, Long userId
+    ) {
+
+        List<Long> requestedItemIds = orderList.stream()
+                .map(UserOrderRequestDTO::itemId)
                 .toList();
 
-        // 검색 성능을 위해 매핑 (이용자가 요청한 ItemId) -> (Inventory)
-        Map<Long, Inventory> inventoryMap = inventories.stream()
+        List<Inventory> lockedInventories = inventoryRepository.findByTheaterIdAndItemIdInWithLock(theaterId, requestedItemIds);
+
+        Map<Long, Inventory> inventoryMap = lockedInventories.stream()
                 .collect(Collectors.toMap(inv -> inv.getItem().getId(), inv -> inv));
 
-        // 주문 정보 저장
         UserOrder userOrder = UserOrder.builder()
                 .user(userRepository.getReferenceById(userId))
                 .theater(theaterRepository.getReferenceById(theaterId))
-                .totalPrice(0L)
+                .status(PaymentStatusType.PENDING)
                 .build();
         userOrderRepository.save(userOrder);
 
-        // 연결 엔터티(OrderItem) 저장
         List<OrderItem> orderItems = orderList.stream()
                 .map(req -> {
                     Inventory inv = inventoryMap.get(req.itemId());
-                    if (inv == null){
-                        throw new IllegalArgumentException("존재하지 않는 품목입니다.");
+                    if (inv == null || !inv.getIsAvailable()){
+                        throw new IllegalArgumentException("존재하지 않거나 판매 중이 아닌 품목입니다.");
                     }
                     if (inv.getQuantity() < req.quantity()){
-                        throw new IllegalArgumentException("재고가 부족합니다.");
+                        throw new IllegalArgumentException(inv.getItem().getName() + " 재고가 부족합니다.");
                     }
 
                     inv.setQuantity(inv.getQuantity() - req.quantity());
 
+                    Item item = inv.getItem();
                     return OrderItem.builder()
                             .order(userOrder)
-                            .item(inv.getItem())
+                            .item(item)
                             .quantity(req.quantity())
-                            .price(inv.getItem().getPrice())
+                            .price(item.getPrice())
                             .build();
                 }).toList();
 
         orderItemRepository.saveAll(orderItems);
 
-        // 최종 결제 금액 계산
-        long totalPrice = orderItems.stream()
-                .mapToLong(orderItem -> (long) orderItem.getPrice() * orderItem.getQuantity())
-                .sum();
+        BigDecimal totalPrice = orderItems.stream()
+                .map(orderItem ->
+                        new BigDecimal(orderItem.getPrice())
+                                .multiply(new BigDecimal(orderItem.getQuantity()))
+                )
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         userOrder.setTotalPrice(totalPrice);
 
         List<ItemListDTO> itemInfo = orderItems.stream()
