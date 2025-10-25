@@ -23,4 +23,6 @@ public class Screen {
     private ScreenType type = ScreenType.NORMAL;
 
     private String name;
+
+    private int price;
 }
