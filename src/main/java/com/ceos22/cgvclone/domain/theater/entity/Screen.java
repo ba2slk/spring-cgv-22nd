@@ -4,6 +4,8 @@ import com.ceos22.cgvclone.domain.theater.enums.ScreenType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Builder
@@ -24,5 +26,5 @@ public class Screen {
 
     private String name;
 
-    private int price;
+    private BigDecimal price;
 }

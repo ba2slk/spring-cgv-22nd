@@ -4,6 +4,7 @@ import com.ceos22.cgvclone.domain.reservation.dto.ReservationCancelDTO;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationRequestDTO;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationResponseDTO;
 import com.ceos22.cgvclone.domain.reservation.service.ReservationService;
+import com.ceos22.cgvclone.domain.reservation.dto.ReservationPendingDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,9 +18,9 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping("/api/reservations")
-    public ResponseEntity<ReservationResponseDTO> createReservation(@RequestBody ReservationRequestDTO reservationRequestDTO,
+    public ResponseEntity<ReservationPendingDTO> createPendingReservation(@RequestBody ReservationRequestDTO reservationRequestDTO,
                                                                     @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
-        ReservationResponseDTO reservation = reservationService.createReservation(reservationRequestDTO, user.getUsername());
+        ReservationPendingDTO reservation = reservationService.createPendingReservation(reservationRequestDTO, user.getUsername());
         return ResponseEntity.ok(reservation);
     }
 

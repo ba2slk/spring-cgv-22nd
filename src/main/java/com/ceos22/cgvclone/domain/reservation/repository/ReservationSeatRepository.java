@@ -17,4 +17,13 @@ public interface ReservationSeatRepository extends JpaRepository<ReservationSeat
     @Query("SELECT rs.seat.id FROM ReservationSeat rs " +
             "WHERE rs.reservation.showtime.id = :showtimeId")
     List<Long> findReservedSeatIdsByShowtimeId(@Param("showtimeId") Long showtimeId);
+
+    @Query("SELECT COUNT(rs) > 0 FROM ReservationSeat rs " +
+            "WHERE rs.reservation.showtime.id = :showtimeId " +
+            "AND rs.seat.id IN :seatIds " +
+            "AND rs.reservation.status != 'CANCELED'")
+    boolean existsActiveReservationForSeats(
+            @Param("showtimeId") Long showtimeId,
+            @Param("seatIds") List<Long> seatIds
+    );
 }

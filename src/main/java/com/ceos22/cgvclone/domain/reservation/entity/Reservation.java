@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -36,7 +37,14 @@ public class Reservation extends BaseTimeEntity {
     @Builder.Default
     private ReservationStatusType status = ReservationStatusType.PENDING;
 
+    @Column(nullable = false)
+    private BigDecimal totalPrice;
+
     public void cancel() {
         this.status = ReservationStatusType.CANCELED;
+    }
+
+    public void confirm() {
+        this.status = ReservationStatusType.RESERVED;
     }
 }
