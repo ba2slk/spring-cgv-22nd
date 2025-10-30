@@ -1,5 +1,6 @@
 package com.ceos22.cgvclone.domain.theater.controller;
 
+import com.ceos22.cgvclone.domain.movie.dto.MovieListDTO;
 import com.ceos22.cgvclone.domain.theater.DTO.TheaterDetailsDTO;
 import com.ceos22.cgvclone.domain.theater.DTO.TheaterListDTO;
 import com.ceos22.cgvclone.domain.theater.service.TheaterService;
@@ -34,11 +35,21 @@ public class TheaterController {
     }
 
     /* 영화관 상세 조회 */
-    @GetMapping("/api/theater/{theaterId}")
+    @GetMapping("/api/theaters/{theaterId}")
     public ResponseEntity<TheaterDetailsDTO> getTheater(
             @PathVariable Long theaterId
     ){
         TheaterDetailsDTO theater = theaterService.getTheater(theaterId);
         return ResponseEntity.ok(theater);
     }
+
+    /* 상영 중인 영화 목록 조회*/
+    @GetMapping("/api/theaters/{theaterId}/movies")
+    public ResponseEntity<List<MovieListDTO>> getMoviesFromTheater(
+            @PathVariable Long theaterId
+    ){
+        List<MovieListDTO> movies= theaterService.getMoviesFromTheater(theaterId);
+        return ResponseEntity.ok(movies);
+    }
+
 }

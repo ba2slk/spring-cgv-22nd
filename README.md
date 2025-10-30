@@ -215,5 +215,379 @@ springdoc:
     path: /swagger-ui.html  
   override-with-generic-response: false
 ```
+---
+# 동시성 해결 방법
+## Database Level
+### 1. Lock
+여러 커넥션에서 동시에 동일한 자원을 요청할 경우, 순서대로 하나의 커넥션만 변경할 수 있게 해주는 기능
+#### 1-1. Shared Lock
+: 읽기 작업을 위한 Lock
 
+##### 특징
+- 읽기 작업은 데이터의 정합성에 영향을 주지 않으므로, 다른 세션의 Shared Lock을 막을 이유가 없다.
+- 한 세션이 Read 할 때 다른 세션이 Write 한다면 데이터의 정합성이 깨지므로 다른 세션의 Exclusive Lock 획득은 막는다.
+- 다른 세션에서 공유 Lock을 걸고 접근할 수 있다.
+- **다른 세션에서 배타 Lock을 걸고 접근할 수 는 없다.**
+
+##### 결론
+Shared Lock을 건다 = "내가 이 데이터 읽을거니까, Exclusinve Lock 걸고 쓸 생각 하지마라. 근데 읽기만 할 애들은 각자 Shared Lock 걸어도 돼~"
+
+#### 1-2. Exclusive Lock
+: 쓰기 작업을 위한 Lock
+
+##### 특징
+- 쓰기 작업은 데이터의 정합성에 영향을 주므로, 다른 세션의 Shared Lock 획득을 막는다.
+- 마찬가지로, 다른 세션의 Exclusive Lock 획득도 막는다.
+- 다른 세션에서 공유 Lock을 걸고 접근할 수 없다.
+- 다른 세션에서 배타 Lock을 걸고 접근할 수 없다.
+
+##### 결론
+Exclusive Lock을 건다 = "내가 이 데이터 변경할거니까, 다른 애들은 읽거나 쓸수 없어~"
+
+### 2. Blocking
+Lock은 하나의 트랜잭션 안에서 걸리고 해제되는데, 이때 L**ock 간의 경합이 발생해서 특정 트랜잭션이 작업을 진행하지 못하고 대기하는 상태**를 의미
+- 데이터에 공유 Lock이 걸린 상태에서 배타 Lock을 걸려고 할 때
+- 데이터에 배타 Lock에 걸린 상태에서 공유 Lock을 걸려고 할 때
+- 데이터에 배타 Lock에 걸린 상태에서 배타 Lock을 걸려고 할 때
+
+#### 2-1. Blocking 상태 해결하기
+Blocking은 문제 상황이 아니라, 데이터의 정합성을 보장하는 과정에서 발생하는 필연적이고 자연스러운 현상임. 하지만 Blocking 상태가 지나치게 길어지면 해당 데이터를 사용하는 작업이 모두 지연될 것이므로 **Lock을 설정할 때 블로킹 상태를 고려하여 설정**해야 함.
+
+##### 2-1-1. 트랜잭션 작업 단위를 최대한 적게 구성하기
+- JPA 사용 시 생명주기가 다른 객체 간의 직접 참조을 간접 참조로 끊음
+
+##### 2-1-2. 동일한 데이터를 동시에 변경하지 않기
+- 비관적 락, 낙관적 락
+
+##### 2-1-3. 트랜잭션이 활발한 주간에는 대용량 데이터 작업 수행 지양하기
+
+
+### 3. Dead Lock
+두 트랜잭션 모두 블로킹 상태에 진입하여 서로의 블로킹을 해결할 수 없는 상태
+<img width="1195" height="629" alt="image" src="https://github.com/user-attachments/assets/c5c8a518-ec8b-4ed0-ab5c-5e65cb4b9fc3" />
+출처: https://ksh-coding.tistory.com/121
+
+## Application Level
+### 1. synchronized 키워드
+#### 코드 예시
+```java
+@Transactional
+public synchronized void decrease(final Long id, final Long quantity) {
+	final Stock stock = stockRepository.findById(id)
+			.orElseThrow();
+	stock.decrease(quantity);
+
+	stockRepository.saveAndFlush(stock);
+}
+```
+critical section(위에서는 재고 감소 로직)에 해당 키워드를 붙여주면 됨.
+
+#### 문제점
+단순히 synchronized 키워드를 붙이는 것만으로 동시성 문제를 해결할 수 없음.
+##### 1. @Transactional
+- @Transactional이 붙은 메소드는 **Proxy 객체를 생성**해서 트랜잭션을 처리함.
+- 이때, **재고 감소가 DB에 반영되는 시점은 트랜잭션 커닛 이후 종료 시점**임.
+- synchronized 키워드는 메소드 선언부에 사용되어, 해당 메소드가 종료되면 다른 스레드에서 해당 메소드를 실행할 수 있게 됨.
+- 따라서 재고 감소 로직이 실행되고 트랜잭션이 종료되기 전까지의 시점에서 다른 스래드가 재고 감소 로직을 실행할 수 있음.
+- 이때 다른 스레드에서 재고를 조회할 경우 감소되지 않은 재고 수량을 Read 하게 되어 재고 감소가 누락됨.
+
+##### 2. 확장성
+Synchronized는 '하나의 프로세스'에 대해서만 특정 데이터에 동시에 하나의 스레드만 접근하는 것을 보장함. → **여러 대의 서버로 확장할 경우 동시성이 보장되지 않음.**
+
+따라서 실무에서  synchronized는 거의 사용하지 않음.
+
+### 2. DB(MySQL) 레벨의 Lock 사용하기
+#### 1. 비관적 락
+실제 DB 단에 Exclusive Lock을 설정해서 동시성을 제어하는 방법
+```java
+public interface StockRepository extends JpaRepository<Stock, Long> {
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select s from Stock s where s.id = :id")
+	Stock findByIdWithPessimisticLock(Long id);
+}
+```
+- @LockModeType.PESSIMISTIC_WRITE: 배타 락 쿼리 수행
+	- SELECT FOR WRITE
+	- 읽는 순간부터 이 데이터는 내가 수정 전용으로 홀딩함. 읽기도, 수정도 다른 트랜잭션은 못 함
+- @LockModeType.PESSIMISTIC_READ: 공유 락 쿼리 수행
+	- SELECT FOR SHARE
+	- 읽기 전용으로 락 걸었음. 다른 사람도 읽기는 가능하지만 수정은 못 해
+
+#### 2. 낙관적 락
+DB 단에 실제 Lock을 설정하지 않고, Version을 관리하는 컬럼을 테이블에 추가해서 데이터 수정 시마다 올바른 버전의 데이터를 수정하는지 판단하는 방식
+<img width="1184" height="618" alt="image" src="https://github.com/user-attachments/assets/69f3d8c0-6561-43ee-930f-8c050b0d1148" />
+```java
+public interface StockRepository extends JpaRepository<Stock, Long> {
+
+	@Lock(LockModeType.OPTIMISTIC)
+	@Query("select s from Stock s where s.id = :id")
+	Stock findByIdWithOptimisticLock(Long id);
+}
+```
+
+이후 Entity에 수동으로 version 컬럼을 추가해주어야 함.
+```java
+@Entity
+public class Stock {
+
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	private Long productId;
+
+	private Long quantity;
+
+	@Version
+	private Long version;
+
+		...
+
+}
+```
+
+버전이 일치하지 않을 경우 기본적으로 예외가 발생하게 됨. 
+따라서 while & try-catch 구문을 활용해서 **재고 감소 로직이 성공할 때까지 수행**하도록 다음과 같이 구현함.
+```java
+public void decrease(Long id, Long quantity) throws InterruptedException {
+	while (true) {
+		try {
+			optimisticLockStockService.decrease(id, quantity);
+			break;
+		} catch (Exception e) {
+			Thread.sleep(50);
+		}
+	}
+}
+```
+
+#### 3. 네임드 락
+임의로 락의 이름을 설정하고, 해당 락을 사용하여 동시성 문제를 해결하는 방법
+주로 **분산 락**을 사용하려고 할 때 많이 사용하는 방식
+
+##### vs 비관적 락
+- 트랜잭션이 종료되더라도 Lock이 자동으로 해제되지 않음.
+	- 별도의 Lock 해제 로직 구현
+	- Lock Timeout 이후 해제
+- Lock 설정 대상
+	- 비관적 락
+		- 해당 테이블의 인덱스 레코드에 Lock 설정
+	- 네임드 락
+		- 해당 테이블이 **아닌** 별도의 MySQL 공간에 지정한 이름의 Lock 설정
+
+##### 분산 락 구현
+- https://techblog.woowahan.com/17416/
+- https://techblog.woowahan.com/2631/
+
+```java
+public interface LockRepository extends JpaRepository<Stock, Long> {
+
+	@Query(value = "select get_lock(:key, 3000)", nativeQuery = true)
+	void getLock(String key);
+
+	@Query(value = "select release_lock(:key)", nativeQuery = true)
+	void releaseLock(String key);
+}
+```
+
+```java
+@Transactional
+public void decrease(final Long id, final Long quantity) {
+	try {
+		lockRepository.getLock(id.toString());
+		stockService.decrease(id, quantity);
+	} finally {
+		lockRepository.releaseLock(id.toString());
+	}
+}
+```
+releasLock 메소드로 네임드 락을 수동으로 해제해 주어야 함.
+
+##### 네임드 락 주의할 점
+네임드 락 설정 부분과 비즈니스 로직의 트랜잭션을 분리해야 함.
+
+- 비즈니스 로직
+```java
+@Service
+public class StockService {
+		
+		...
+
+		// 비즈니스 로직
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void decrease(final Long id, final Long quantity) throws SQLException {
+		final Stock stock = stockRepository.findById(id)
+				.orElseThrow();
+		stock.decrease(quantity);
+
+		stockRepository.saveAndFlush(stock);
+	}
+}
+```
+
+- 네임드 락 설정 부분
+```java
+@Component
+public class NamedLockStockFacade {
+
+	...
+
+		// Lock 설정, 해제 로직
+	@Transactional
+	public void decrease(final Long id, final Long quantity) throws SQLException {
+		try {
+			lockRepository.getLock(id.toString());
+			stockService.decrease(id, quantity);
+		} finally {
+			lockRepository.releaseLock(id.toString());
+		}
+	}
+}
+```
+
+호출 흐름
+```java
+[외부 호출자]
+        │
+        ▼
+NamedLockStockFacade.decrease()
+        │
+        ├─① lockRepository.getLock()   ← Named Lock 획득
+        │
+        ├─② stockService.decrease()    ← 실제 재고 감소
+        │       ├─ stockRepository.findById()
+        │       ├─ stock.decrease(quantity)
+        │       └─ stockRepository.saveAndFlush()
+        │
+        └─③ lockRepository.releaseLock() ← Named Lock 해제
+```
+
+### 3. 장단점
+#### 1. 비관적 락
+- 장점
+	- Race Condition이 잦은 경우 낙관적 락보다 성능이 좋음.
+	- DB 단의 Lock이므로 데이터 정합성 보장
+- 단점
+	- DB 단의 Lock을 설정하는 이유로, 한 트랜잭션 작업이 정상적으로 끝나지 않으면 다른 트랜잭션 작업들이 대기해야 하므로 성능이 감소할 우려가 있음. (Blocking)
+
+#### 2. 낙관적 락
+- 장점
+	- DB 단에서 별도의 Lock을 설정하지 않기 때문에 하나의 트랜잭션 작업이 길어질 때 다른 작업이 영향받지 않아서 성능이 좋을 수 있다.
+- 단점
+	- 버전이 맞지 않아서 예외가 발생하는 경우 별도의 재시도 로직을 구현해야 하는 부담이 있음.
+	- 버전이 맞지 않는 상황이 잦은 경우, 즉 경합이 잦은 경우 재시도를 계속 할 것이므로 성능이 좋지 않을 수 있음.
+
+#### 4. 네임드 락
+- 장점
+	- Lock을 위한 별도의 공간에 Lock을 설정하기 때문에 같은 Named Lock을 사용하는 작업 이외의 작업은 영향 받지 않음.
+	- INSERT 작업의 경우에는 기준을 잡을 레코드가 존재하지 않아 비관적 락을 사용할 수 없는데, 이때 Named Lock을 사용할 수 있음.
+	- 분산 락 구현 가능.
+- 단점
+	- 트랜잭션 종료 시에 Lock 해제, 세션 관리 등을 수동으로 처리해야 하는 이유로 구현 복잡도가 높음.
+
+---
+# Spring에서 외부 API 호출하기
+- HttpURLConnection/URL Connection
+- RestTemplate
+- HttpClient
+- WebClient
+- OpenFeign
+
+## HttpURLConnection / URLConnection
+### 특징
+- 순수 Java로 HTTP 통신 가능
+- URL을 이용하여 외부 API에 연결하고 데이터를 전송할 수 있음.
+
+### 단점
+- **동기적인 통신**
+- URLConnection은 저수준 API로서, 기본적인 요청/응답 기능이 제공되지만 추가적인 기능은 직접 구현해야 함.
+
+## HttpClient
+### 특징
+- Apache HTTP 컴포넌트
+- 객체 생성이 쉽다.
+```java
+HttpClient client = HttpClientBuilder.create().build(); // HttpClient 생성
+...
+HttpResponse response = client.execute(getRequest); // request 수행
+```
+- 비동기 방식도 지원함.
+
+### 단점
+- 반복적이고 긴 코드
+- 응답 컨테츠 타입에 따라 별도의 로직이 필요함.
+
+## Spring RestTemplate
+### 특징
+- Spring 3에서 추가
+- HttpClient를 추상화해서 제공
+- 사용하기 편하고 직관적임
+
+### 단점
+- **동기적인 통신**
+- 커넥션 풀을 사용하지 않아서 연결할 때마다 로컬 포트를 열고, tcp 연결을 맺는다 → 이를 해결하기 위해 커넥션 풀을 별도로 사용해야 한다.
+
+## WebClient
+### 특징
+- Spring 5부터 도입
+- 비동기/논블로킹 방식으로 외부 API 호출 가능 → 높은 처리량과 확장성 지원
+- 리액티브 프로그래밍 가능
+	- 리액티브 프로그래밍 = 데이터 스트림 + 비동기 이벤트 흐름
+	- 데이터 스트림을 효과적으로 처리할 수 있음.
+- 가독성이 좋다.
+
+### 단점
+- WebFlux 학습곡선 존재
+- WebFlux 모듈 전체를 의존성에 포함해야 하므로, 작은 규모의 프로젝트에서 해당 모듈을 도입하는 것에 대해 고민해볼 여지가 있음.
+
+## OpenFeign
+### 특징
+- 선언적(어노테이션 사용) 클라이언트
+- Spring Data JPA와 유사하게 **인터페이스에 어노테이션을 붙여서** 구현
+```java
+@FeignClient(name = "user-service", url = "https://api.ceos22.com/users")
+public interface UserClient {
+
+    @GetMapping("/{id}")
+    User getUserById(@PathVariable("id") Long id);
+
+    @PostMapping
+    User createUser(@RequestBody User user);
+}
+```
+- 코드 작성이 쉬움.
+- 다른 Spring Cloud 기술과의 통합이 쉬움.
+
+### 단점
+- spring cloud 의존성이 발생함.
+- 기본 설정에서는 HTTP/2를 지원하지 않지만, OkHttpClient를 설정하면 HTTP/2 통신이 가능함.
+
+---
+# 외부 결제 시스템 연동
+## API
+- [x] 결제
+POST payments/{paymentId}/instant
+<img width="1200" height="964" alt="image" src="https://github.com/user-attachments/assets/9e9552cf-0329-41fd-9a68-36da64a75aae" />
+PENDING → RESERVED 상태 변경 → 예매 성공
+
+- [x] 결제 취소
+POST payments/{paymentId}/cancel
+<img width="1169" height="1315" alt="image" src="https://github.com/user-attachments/assets/df2a579b-28f0-4e15-ba94-93334f926fb0" />
+
+
+- [x] 단건 결제 조회
+GET payments/{paymentId}
+<img width="1169" height="1151" alt="image" src="https://github.com/user-attachments/assets/d2d81174-94d0-4c6c-820e-66cf21820f72" />
+
+
+# 로깅 전략
+- 핵심 전략: 스프링 프로필(local vs prod) 기반 환경 분리
+- 개발/기본 환경 (local, dev, default):
+    - 레벨: DEBUG (애플리케이션, SQL, Web 상세 로깅)
+    - 출력: 콘솔 + 파일 (동기)
+- 운영 환경 (prod):
+    - 레벨: INFO (주요 정보만)
+    - 출력: 파일 전용 (비동기)
+		- AsyncAppender를 통한 비동기 로깅으로 I/O 병목 방지
+- 파일 관리: 일자별 로그 분리 (RollingFileAppender), 7일간 보관
 
