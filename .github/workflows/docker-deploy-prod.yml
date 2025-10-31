@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: [1] Build and Push Docker Image
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ github.sha }}
@@ -28,7 +28,7 @@ jobs:
         run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME}}:${{ github.sha }}
 
   deploy:
-    name: [2] Deploy to EC2 Server
+    name: Deploy to EC2 Server
     runs-on: ubuntu-latest
     needs: build
 
