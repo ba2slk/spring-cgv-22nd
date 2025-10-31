@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ls -al
+RUN ls -al gradle/wrapper
 
 RUN chmod +x gradlew
 RUN ./gradlew bootJar
