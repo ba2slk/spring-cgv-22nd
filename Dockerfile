@@ -5,6 +5,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN ls -al
+
 RUN chmod +x gradlew
 RUN ./gradlew bootJar
 RUN echo "Checking whether *.jar created..."
