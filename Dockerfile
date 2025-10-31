@@ -5,7 +5,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN gradle bootJar
+RUN chmod +x gradlew
+RUN ./gradlew bootJar
+RUN echo "Checking whether *.jar created..."
+RUN ls -l build/libs
 
 # Stage 2: app 실행
 FROM openjdk:17-jdk-slim
