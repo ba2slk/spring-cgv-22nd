@@ -3,15 +3,9 @@ FROM gradle:8.3-jdk17 AS builder
 
 WORKDIR /app
 
-COPY build.gradle settings.gradle ./
-COPY gradlew ./gradlew
-COPY gradle ./gradle
+COPY . .
 
-RUN ./gradlew dependencies
-
-COPY src ./src
-
-RUN ./gradlew build --no-daemon -x test
+RUN gradlew bootJar
 
 # Stage 2: app 실행
 FROM openjdk:17-jdk-slim
