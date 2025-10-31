@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./gradlew bootJar
+RUN gradle bootJar
 
 # Stage 2: app 실행
 FROM openjdk:17-jdk-slim
