@@ -44,3 +44,4 @@ secrets.yml
 
 application.yml
 *.log
+.env
