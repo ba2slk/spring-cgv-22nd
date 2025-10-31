@@ -18,7 +18,7 @@ jobs:
 
       - name: Authenticate with Docker Registry
         # run: 직접 shell 명령어 실행하기
-        run: echo "${{ secrtes.DOCKER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} --username ${{ secrets.DOCKER_REGISTRY_USER_NAME }} --password-stdin
+        run: echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} --username ${{ secrets.DOCKER_REGISTRY_USER_NAME }} --password-stdin
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
 
