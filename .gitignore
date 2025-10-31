@@ -44,6 +44,6 @@ secrets.yml
 
 .idea
 
-application.yml
+# application.yml
 *.log
 .env
