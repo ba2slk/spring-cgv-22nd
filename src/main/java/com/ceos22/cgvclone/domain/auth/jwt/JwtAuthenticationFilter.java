@@ -25,11 +25,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         String token = tokenProvider.getAccessToken(request);
 
+        // 토큰 유효성 검사
         if (token != null && tokenProvider.validateAccessToken(token)) {
             Authentication authentication = tokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
+        // 다음 필터로 요청 넘기기
         filterChain.doFilter(request, response);
     }
 }

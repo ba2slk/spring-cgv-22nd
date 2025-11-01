@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,7 +47,7 @@ public class UserOrderService {
     // 주문 정보 생성
     @Transactional
     public UserOrderResponseDTO createPendingUserOrder(
-            List<UserOrderRequestDTO> orderList, Long theaterId, Long userId
+            List<UserOrderRequestDTO> orderList, Long theaterId, UUID userUuid
     ) {
 
         List<Long> requestedItemIds = orderList.stream()
@@ -59,7 +60,7 @@ public class UserOrderService {
                 .collect(Collectors.toMap(inv -> inv.getItem().getId(), inv -> inv));
 
         UserOrder userOrder = UserOrder.builder()
-                .user(userRepository.getReferenceById(userId))
+                .user(userRepository.getReferenceByUuid(userUuid))
                 .theater(theaterRepository.getReferenceById(theaterId))
                 .status(PaymentStatusType.PENDING)
                 .build();

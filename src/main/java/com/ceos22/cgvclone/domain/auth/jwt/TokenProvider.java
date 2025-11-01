@@ -1,5 +1,6 @@
 package com.ceos22.cgvclone.domain.auth.jwt;
 
+import com.ceos22.cgvclone.domain.auth.CustomUserDetails;
 import com.ceos22.cgvclone.domain.auth.service.CustomUserDetailsService;
 import com.ceos22.cgvclone.domain.user.entity.User;
 import com.ceos22.cgvclone.domain.user.repository.UserRepository;
@@ -16,12 +17,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -56,22 +57,20 @@ public class TokenProvider implements InitializingBean {
     }
 
     public String createAccessToken(String email, Authentication authentication) {
-        String authorities;
-        if (authentication.getAuthorities() == null || authentication.getAuthorities().isEmpty()) {
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("user not found: " + email));
-            authorities = user.getRole().name();
-        } else {
-            authorities = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.joining(","));
-        }
+        // CustomUserDetails 객체 획득
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        String authorities = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        String uuid = userDetails.getUuid().toString();
 
         long now = System.currentTimeMillis();
         Date validity = new Date(now + accessExpiration);
 
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(uuid)
                 .claim("auth", authorities)
                 .setIssuedAt(new Date(now))
                 .setExpiration(validity)
@@ -79,13 +78,17 @@ public class TokenProvider implements InitializingBean {
                 .compact();
     }
 
-    public String getTokenUserId(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    public UUID getTokenUserUuid(String token) {
+        try {
+            return UUID.fromString(Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject());
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid JWT", e);
+        }
     }
 
     public boolean validateAccessToken(String token) {
@@ -101,16 +104,12 @@ public class TokenProvider implements InitializingBean {
     }
 
     public Authentication getAuthentication(String token) {
-        String email = getTokenUserId(token);
+        UUID uuid = getTokenUserUuid(token);
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+        User user = userRepository.findByUuid(uuid)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + uuid));
 
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .authorities(user.getRole().name())
-                .build();
+        UserDetails userDetails = new CustomUserDetails(user);
 
         return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
