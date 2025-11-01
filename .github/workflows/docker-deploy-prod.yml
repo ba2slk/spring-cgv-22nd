@@ -47,6 +47,15 @@ jobs:
             echo "Exporting new image tag..."
             export IMAGE_TAG=${{ needs.build.outputs.image_tag }}
             
+            # 환경변수 주입
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}
+            export JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
+            export PORTONE_TOKEN=${{ secrets.PORTONE_TOKEN }}
+            export PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}
+            export PORTONE_HOST=${{ secrets.PORTONE_HOST }}
+            export HIBERNATE_DDL_AUTO=${{ secrets.HIBERNATE_DDL_AUTO }}
+            
             echo "Running containers..."
             docker compose up -d
             
