@@ -38,9 +38,9 @@ public class ReservationService {
     /* 예매 */
     @Deprecated
     @Transactional
-    public ReservationResponseDTO createReservation(ReservationRequestDTO reservationRequestDTO, String email) {  // TODO: Spring Security 기반 User 정보 획득
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+    public ReservationResponseDTO createReservation(ReservationRequestDTO reservationRequestDTO, UUID userUuid) {
+        User user = userRepository.findByUuid(userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userUuid));
 
         Showtime showtime = showtimeRepository.findById(reservationRequestDTO.showtimeId())
                 .orElseThrow(() -> new IllegalArgumentException("Showtime not found: " + reservationRequestDTO.showtimeId()));
@@ -85,9 +85,9 @@ public class ReservationService {
 
     /* 동시성을 반영한 임시 예매 생성 */
     @Transactional
-    public ReservationPendingDTO createPendingReservation(ReservationRequestDTO request, String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+    public ReservationPendingDTO createPendingReservation(ReservationRequestDTO request, UUID userUuid) {
+        User user = userRepository.findByUuid(userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userUuid));
 
         Showtime showtime = showtimeRepository.findWithScreenById(request.showtimeId())
                 .orElseThrow(() -> new EntityNotFoundException("Showtime not found: " + request.showtimeId()));
@@ -134,11 +134,11 @@ public class ReservationService {
 
     /* 예매 취소 */
     @Transactional
-    public ReservationResponseDTO cancelReservation (ReservationCancelDTO reservationCancelDTO, String email) {  // TODO: Spring Security 기반 User 정보 획득
+    public ReservationResponseDTO cancelReservation (ReservationCancelDTO reservationCancelDTO, UUID userUuid) {
         Reservation reservation = reservationRepository.findByUuid(reservationCancelDTO.uuid())
                 .orElseThrow(()->new IllegalArgumentException("Reservation not found: " + reservationCancelDTO.uuid()));
 
-        if (!reservation.getUser().getEmail().equals(email)) {
+        if (!reservation.getUser().getUuid().equals(userUuid)) {
             throw new IllegalStateException("본인의 예매 건만 취소할 수 있습니다.");
         }
 
