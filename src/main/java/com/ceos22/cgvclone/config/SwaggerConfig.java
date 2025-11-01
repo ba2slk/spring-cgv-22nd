@@ -11,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @EnableWebMvc
 public class SwaggerConfig {
 
+    /* OpenAPI 설정 초기화 및 문서 구성 정의 */
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
@@ -18,6 +19,7 @@ public class SwaggerConfig {
                 .info(apiInfo());
     }
 
+    /* API 문서 메타데이터 */
     private Info apiInfo() {
         return new Info()
                 .title("My CGV API")
