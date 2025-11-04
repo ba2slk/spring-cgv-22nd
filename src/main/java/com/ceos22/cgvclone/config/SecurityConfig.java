@@ -22,6 +22,7 @@ public class SecurityConfig {
 
     private final TokenProvider tokenProvider;
 
+    /* Spring Security 보안 설정 및 JWT 인증 필터 등록 */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
@@ -47,11 +48,13 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /* 비밀번호 암호화를 위해 BCryptPasswordEncoder를 빈으로 등록 */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /* Spring Container에 AuthenticationManager 등록 */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();

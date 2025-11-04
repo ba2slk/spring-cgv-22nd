@@ -1,5 +1,6 @@
 package com.ceos22.cgvclone.domain.reservation.controller;
 
+import com.ceos22.cgvclone.domain.auth.CustomUserDetails;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationCancelDTO;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationRequestDTO;
 import com.ceos22.cgvclone.domain.reservation.dto.ReservationResponseDTO;
@@ -9,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.userdetails.User;
 
 
 @RestController
@@ -20,15 +20,15 @@ public class ReservationController {
 
     @PostMapping("/api/reservations")
     public ResponseEntity<ReservationPendingDTO> createPendingReservation(@RequestBody ReservationRequestDTO reservationRequestDTO,
-                                                                    @AuthenticationPrincipal User user) {
-        ReservationPendingDTO reservation = reservationService.createPendingReservation(reservationRequestDTO, user.getUsername());
+                                                                    @AuthenticationPrincipal CustomUserDetails user) {
+        ReservationPendingDTO reservation = reservationService.createPendingReservation(reservationRequestDTO, user.getUuid());
         return ResponseEntity.ok(reservation);
     }
 
     @PutMapping("/api/reservations")
     public ResponseEntity<ReservationResponseDTO> cancelReservation(@RequestBody ReservationCancelDTO reservationCancelDTO,
-                                                                    @AuthenticationPrincipal User user) {
-        ReservationResponseDTO reservation = reservationService.cancelReservation(reservationCancelDTO, user.getUsername());
+                                                                    @AuthenticationPrincipal CustomUserDetails user) {
+        ReservationResponseDTO reservation = reservationService.cancelReservation(reservationCancelDTO, user.getUuid());
         return ResponseEntity.ok(reservation);
     }
 }

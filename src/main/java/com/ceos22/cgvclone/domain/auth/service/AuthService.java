@@ -1,26 +1,26 @@
 package com.ceos22.cgvclone.domain.auth.service;
 
+import com.ceos22.cgvclone.domain.auth.CustomUserDetails;
 import com.ceos22.cgvclone.domain.auth.dto.JwtTokenDTO;
 import com.ceos22.cgvclone.domain.auth.dto.LoginRequestDTO;
 import com.ceos22.cgvclone.domain.auth.dto.LogoutResponseDTO;
 import com.ceos22.cgvclone.domain.auth.dto.SignUpRequestDTO;
+import com.ceos22.cgvclone.domain.auth.exception.CustomAuthenticationException;
 import com.ceos22.cgvclone.domain.auth.jwt.JwtTokenBlacklist;
 import com.ceos22.cgvclone.domain.auth.jwt.TokenProvider;
 import com.ceos22.cgvclone.domain.user.entity.User;
 import com.ceos22.cgvclone.domain.user.enums.UserRoleType;
 import com.ceos22.cgvclone.domain.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class AuthService {
     private final JwtTokenBlacklist jwtTokenBlacklist;
 
 
-    // 회원가입
+    /* 회원 가입 */
     @Transactional
     public void signup(SignUpRequestDTO signUpRequestDTO) {
         if (userRepository.findByEmail(signUpRequestDTO.email()).isPresent()) {
@@ -51,22 +51,30 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    // 로그인
-    @Transactional
+    /* 로그인 */
+    @Transactional(readOnly = true)
     public JwtTokenDTO login(LoginRequestDTO loginRequestDTO) {
+
         Authentication authToken = new UsernamePasswordAuthenticationToken(
                 loginRequestDTO.email(),
                 loginRequestDTO.password()
         );
 
-        Authentication authentication = authenticationManager.authenticate(authToken);
+        // 인증
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(authToken);
+        } catch (BadCredentialsException e) {
+            throw new CustomAuthenticationException("아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
 
-        org.springframework.security.core.userdetails.User principal =
-                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        // 현재 인증된 사용자 객체
+        CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
 
 
+        // UserUUID 기반으로 토큰 생성
         String accessToken = tokenProvider.createAccessToken(
-                principal.getUsername(),
+                principal.getUuid().toString(),
                 authentication
         );
 
@@ -74,11 +82,14 @@ public class AuthService {
     }
 
 
-    // 로그 아웃
+    /* 로그아웃 */
     @Transactional
     public LogoutResponseDTO logout(HttpServletRequest request) {
+
+        // 헤더에서 토큰 추출
         String token = tokenProvider.getAccessToken(request);
 
+        // 토큰 유무 확인
         if (token == null || token.isEmpty()) {
             return LogoutResponseDTO.builder()
                     .success(false)
@@ -86,6 +97,7 @@ public class AuthService {
                     .build();
         }
 
+        // 토큰 유효성 검증
         if (!tokenProvider.validateAccessToken(token) || jwtTokenBlacklist.contains(token)) {
             return LogoutResponseDTO.builder()
                     .success(false)
@@ -93,6 +105,7 @@ public class AuthService {
                     .build();
         }
 
+        // TODO: 현재 서버 종료 시 소멸 -> Blacklist storage 필요
         jwtTokenBlacklist.add(token);
 
         SecurityContextHolder.clearContext();

@@ -3,6 +3,8 @@
 *.ipr
 *.iws
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
+
 *.sw?
 *~
 .#*
@@ -42,5 +44,6 @@ secrets.yml
 
 .idea
 
-application.yml
+# application.yml
 *.log
+.env
