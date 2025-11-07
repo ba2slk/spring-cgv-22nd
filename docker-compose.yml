@@ -1,6 +1,21 @@
+version: '3.8'
+
 services:
   server:
     image: "${DOCKER_REGISTRY_URL}/${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
     ports:
       - "80:8080"
     restart: always
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - HIBERNATE_DDL_AUTO=${HIBERNATE_DDL_AUTO}
+
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+
+      - PORTONE_TOKEN=${PORTONE_TOKEN}
+      - PORTONE_STORE_ID=${PORTONE_STORE_ID}
+      - PORTONE_HOST=${PORTONE_HOST}
