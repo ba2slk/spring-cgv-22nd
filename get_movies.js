@@ -2,11 +2,16 @@ import http from "k6/http";
 import { sleep } from "k6";
 
 export const options = {
-    vus: 1000, // 가상 사용자 수
-    duration: "10s", // 테스트 시간
+    stages: [
+        { duration: "1m", target: 100 },
+
+        { duration: "3m", target: 100 },
+
+        { duration: "1m", target: 0 },
+    ],
 };
 
 export default function () {
-    http.get("http://localhost:8080/api/movies");
+    http.get("http://144.24.71.208:7777/api/movies");
     sleep(1);
 }
