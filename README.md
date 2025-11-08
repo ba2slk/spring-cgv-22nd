@@ -759,73 +759,97 @@ services:
 ## Github Actions
 - 프로젝트 루트에 .github/workflows/NAME.yml 생성
 ```yml
-# docker-deploy-prod.yml
+name: CI/CD Pipeline with Docker - Push based
+on:
+  push:
+    branches:
+      - prod
 
-name: CI/CD Pipeline with Docker - Push based  
-on:  
-  push:  
-    branches:  
-      - prod  
-  
-jobs:  
-  build:  
-    name: Build and Push Docker Image  
-    runs-on: ubuntu-latest  
-    outputs:  
-      image_tag: ${{ github.sha }}  
-  
-    steps:  
-      - name: Checkout Source Code  
-        # uses: 기존 marketplace 상에 등록된 action 사용하기  
-        uses: actions/checkout@v4  
-  
-      - name: Authenticate with Docker Registry  
-        # run: 직접 shell 명령어 실행하기  
-        run: echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} --username ${{ secrets.DOCKER_REGISTRY_USER_NAME }} --password-stdin  
-      - name: Build Docker Image  
-        run: docker build -t ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ github.sha }} .  
-  
-      - name: Push Docker Image  
-        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME}}:${{ github.sha }}  
-  
-  deploy:  
-    name: Deploy to EC2 Server  
-    runs-on: ubuntu-latest  
-    needs: build  
-  
-    steps:  
-      - name: Deploy to EC2  
-        uses: appleboy/ssh-action@v1.2.0  
-        with:  
-          host: ${{ secrets.AWS_EC2_HOST }}  
-          username: ubuntu  
-          key: ${{ secrets.AWS_EC2_SSH_PRIVATE_KEY }}  
-          port: ${{ secrets.AWS_EC2_SSH_PORT }}  
-          script: |  
-            cd ~  
-              
-            echo "Pulling new image..."  
-            docker pull ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}  
-              
-            echo "Exporting new image tag..."  
-            export IMAGE_TAG=${{ needs.build.outputs.image_tag }}  
-              
-            # 환경변수 주입  
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}  
-            export JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}  
-            export JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}  
-            export PORTONE_TOKEN=${{ secrets.PORTONE_TOKEN }}  
-            export PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}  
-            export PORTONE_HOST=${{ secrets.PORTONE_HOST }}  
-            export HIBERNATE_DDL_AUTO=${{ secrets.HIBERNATE_DDL_AUTO }}  
-              
-            echo "Running containers..."  
-            docker compose up -d  
-              
-            echo "Pruning old images..."  
-            docker image prune -f  
-              
-            echo "Done. Check container status below."  
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ github.sha }}
+
+    steps:
+      - name: Checkout Source Code
+        # uses: 기존 marketplace 상에 등록된 action 사용하기
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Docker Registry
+        # run: 직접 shell 명령어 실행하기
+        run: echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} --username ${{ secrets.DOCKER_REGISTRY_USER_NAME }} --password-stdin
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+
+  deploy:
+    name: Deploy to EC2 Server
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ORACLE_INSTANCE_HOST }}
+          username: ubuntu
+          key: ${{ secrets.ORACLE_INSTANCE_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.ORACLE_INSTANCE_SSH_PORT }}
+          script: |
+            cd ~
+            
+            echo "Pulling new image..."
+            docker pull ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}
+            
+            echo "Exporting new image tag..."
+            export IMAGE_TAG=${{ needs.build.outputs.image_tag }}
+            echo $IMAGE_TAG
+            
+            # 환경변수 주입
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}
+            export JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
+            export PORTONE_TOKEN=${{ secrets.PORTONE_TOKEN }}
+            export PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}
+            export PORTONE_HOST=${{ secrets.PORTONE_HOST }}
+            export HIBERNATE_DDL_AUTO=${{ secrets.HIBERNATE_DDL_AUTO }}
+            export DOCKER_REGISTRY_URL=${{ secrets.DOCKER_REGISTRY_URL }}
+            export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
+            export DB_URL=${{ secrets.DB_URL }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            
+            echo "Cloning into 'ba2slk/spring-cgv-22nd' ..."
+            git clone https://github.com/ba2slk/spring-cgv-22nd.git
+            
+            cd ./spring-cgv-22nd
+            pwd
+            
+            echo "Checkout to 'prod'"
+            git switch prod
+            git branch
+            
+            echo "Show docker-compose.yml"
+            ls -al | grep 'docker-compose.yml'
+            
+            echo "Terminating running containers..."
+            docker compose down
+            
+            echo "Running containers..."
+            docker compose up -d
+            
+            echo "Removing cloned repository..."
+            cd ~
+            rm -rf ./spring-cgv-22nd
+            
+            echo "Pruning old images..."
+            docker image prune -f
+            
+            echo "Done. Check container status below."
             docker ps
 ```
 - secret → Settings > secrets and variables → actions
@@ -850,3 +874,131 @@ jobs:
 ## 배포 흐름 도식화
 <img width="1668" height="444" alt="image" src="https://github.com/user-attachments/assets/78d5cf6c-b2a9-4ecb-bd38-9db47edbe296" />
 
+## 부하 테스트
+### 부하 제공 환경
+- 로컬 머신에서 `k6 run` 수행
+- 리모트 서버(`144.24.71.208:7777/api/movies`) 대상
+### 부하 테스트 시나리오
+- 총 테스트 시간: 5m
+- vus: 100
+- 세 개의 스테이지로 나누어 각 단계에서의 성능 확인 시도
+```javascript
+import http from "k6/http";  
+import { sleep } from "k6";  
+  
+export const options = {  
+    stages: [
+	    // (!) 1분 간 100명에 도달하도록 사용자를 서서히 증가  
+        { duration: "1m", target: 100 },
+          
+		// (2) 3분 동안 100 명의 사용자 유지
+        { duration: "3m", target: 100 },  
+  
+		// (3) 1분 동안 사용자를 서서히 감소
+        { duration: "1m", target: 0 },  
+    ],  
+};  
+  
+export default function () {  
+    http.get("http://144.24.71.208:7777/api/movies");  
+    sleep(1);  
+}
+```
+
+### 결과
+1. HTTP Performance overview
+<img width="2779" height="653" alt="image" src="https://github.com/user-attachments/assets/c979be35-2c11-44f6-950c-8e0431f831ad" />
+- 초반 19:57:30 ~ 19:58:10
+    - 요청 수가 증가함에 따라 응답 시간도 비례해서 증가
+- 중반 19:58:15 ~ 19:58:45
+    - Request Duration이 갑자기 크게 튀어오름
+    - 하지만 Request Rate는 계속 증가하기 때문에 서버가 요청을 즉시 처리하지 못하고 대기 큐가 쌓이는 상황으로 병목 지점으로 판단 가능
+- 후반 (19:59:00 이후)
+    - Request Duration이 다시 떨어지고 안정되는 모습
+
+1. VUs
+<img width="1375" height="644" alt="image" src="https://github.com/user-attachments/assets/f3928090-d88f-4ce0-80c0-392fc969d601" />
+- 19:58:10 ~ 19:58:30 사이에서 VU가 증가하지만 Request rate가 증가하지 않기 때문에 해당 지점에서 병목이 발생했다고 볼 수 있음.
+
+# 모니터링
+하지만 병목 원인이 애플리케이션인지 확실히 모르기 때문에 모니터링 지표를 함께 보기 위해 컨테이너를 추가로 구성함.
+## Grafana + Loki
+### docker-compose.yml
+```yml
+services:  
+  server:  
+    ports:  
+    - "7777:8080"  
+    image: "${DOCKER_REGISTRY_URL}/${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"  
+    environment:  
+      - DB_URL=${DB_URL}  
+      - DB_USERNAME=${DB_USERNAME}  
+      - DB_PASSWORD=${DB_PASSWORD}  
+      - HIBERNATE_DDL_AUTO=${HIBERNATE_DDL_AUTO}  
+  
+      - JWT_SECRET=${JWT_SECRET}  
+      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}  
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}  
+  
+      - PORTONE_TOKEN=${PORTONE_TOKEN}  
+      - PORTONE_STORE_ID=${PORTONE_STORE_ID}  
+      - PORTONE_HOST=${PORTONE_HOST}  
+    networks:  
+      - monitoring-net  
+  
+  prometheus:  
+    image: prom/prometheus:latest  
+    container_name: prometheus-container  
+    ports:  
+      - "9090:9090"  
+    volumes:  
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml  
+    networks:  
+      - monitoring-net  
+  
+  grafana:  
+    image: grafana/grafana:latest  
+    container_name: grafana-container  
+    ports:  
+      - "3000:3000"  
+    volumes:  
+      - grafana-storage:/var/lib/grafana  
+    networks:  
+      - monitoring-net  
+    depends_on:  
+      - prometheus  
+  
+networks:  
+  monitoring-net:  
+    driver: bridge  
+  
+volumes:  
+  grafana-storage:
+```
+### 통신 흐름 도식화
+<img width="1401" height="983" alt="image" src="https://github.com/user-attachments/assets/308776e8-e5b9-4632-b192-086c96cebca9" />
+→ grafana 서버는 추후 ingress 설정을 통해 public에서 접근 불가능하도록 변경할 예정
+
+### 모니터링 지표: JVM
+
+1. CPU 사용량
+<img width="672" height="401" alt="image" src="https://github.com/user-attachments/assets/b6a10d1c-392f-4b6a-9667-f35b269cf9f8" />
+
+- CPU 사용량 **100 퍼센트** 달성
+
+2. Load
+<img width="682" height="401" alt="image" src="https://github.com/user-attachments/assets/ce292732-cd40-4998-bcf1-166f276605b3" />
+
+- 초록색: Load Average (=1분 평균 시스템 로드)
+- 노란색: CPU 코어 개수
+- 정상 기준: Load Average ≤ CPU 코어 수
+→ 하지만 위에서 병목 지점이라고 판단했던 시간 대에 **CPU가 감당할 수 있는 처리량의 약 6배 만큼의 작업이 동시에 실행되고 있음**을 알 수 있음.
+
+3. Memory
+<img width="682" height="430" alt="image" src="https://github.com/user-attachments/assets/d699cd12-2eb4-4ccb-b0db-871d806fcced" />
+
+- 메모리는 기본 1GB + 2GB 스왑 메모리 = 총 3GB 수준임을 고려하면 무리가 가지 않은 것 같음.
+
+
+### 결론
+OCI 인스턴스에서 병목이 발생하고 있다는 것을 성능 지표를 통해 한 번 더 확인할 수 있었다.
