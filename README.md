@@ -591,8 +591,6 @@ GET payments/{paymentId}
 		- AsyncAppender를 통한 비동기 로깅으로 I/O 병목 방지
 - 파일 관리: 일자별 로그 분리 (RollingFileAppender), 7일간 보관
 
-<<<<<<< HEAD
-=======
 ---
 
 # (Week 5) Github Action + Docker 기반 CI/CD 파이프라인
