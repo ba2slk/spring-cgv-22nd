@@ -591,3 +591,417 @@ GET payments/{paymentId}
 		- AsyncAppender를 통한 비동기 로깅으로 I/O 병목 방지
 - 파일 관리: 일자별 로그 분리 (RollingFileAppender), 7일간 보관
 
+<<<<<<< HEAD
+=======
+---
+
+# (Week 5) Github Action + Docker 기반 CI/CD 파이프라인
+# 수동 배포
+## 디버깅
+### Docker 환경 변수 설정
+- application.yml에 `${DB_URL}`과 같이 민감 정보 마스킹 (spring boot에서 .env는 표준이 아닌듯..?)
+- 로컬 환경
+	- IntelliJ → 상단 CgvcloneApplication → Edit Configuration → Environment Variable 설정
+- 배포 환경
+	- `docker container run -e DB_URL="jdbc:RDS endpoint" -e DB_URSERNAME="admin" -e DB_PASSWORD="password" (...)`
+	- Github에서 통합 관리하는 게 편함.
+
+### RDS → DB 이름 '-' 미설정 관련
+1. 로컬 mysql 클라이언트로 접속
+	- 인바운드 소스를 내 IP로 설정
+```cmd
+ubuntu$> -h {RDS endpoint} -P 3306 -u admin -p
+```
+2. 스키마 생성
+```mysql
+CREATE DATABASE cgv_clone CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SHOW DATABASES;
+USE cgv_clone;
+```
+
+### RDS <~> EC2 연결 문제
+RDS 보안그룹의 인바운드 규칙에 EC2의 보안그룹 ID를 추가하여 해결
+
+### 브라우저 → 서버 접속 불가
+```
+sudo ufw allow 80/tcp
+```
+방화벽 rule 추가
+
+## 배포 결과
+<img width="1139" height="210" alt="image" src="https://github.com/user-attachments/assets/36de283c-9945-4838-ace8-fd4558613c71" />
+
+---
+# CI/CD
+## 디버깅
+### Github Action - Error: Unable to access jarfile /app/gradle/wrapper/gradle-wrapper.jar
+```
+#15 [builder 6/8] RUN ./gradlew bootJar
+
+[](https://github.com/ba2slk/spring-cgv-22nd/actions/runs/18964949556/job/54159635638#step:4:149)#15 0.127 Error: Unable to access jarfile /app/gradle/wrapper/gradle-wrapper.jar
+
+[](https://github.com/ba2slk/spring-cgv-22nd/actions/runs/18964949556/job/54159635638#step:4:150)#15 ERROR: process "/bin/sh -c ./gradlew bootJar" did not complete successfully: exit code: 1
+
+...
+
+[](https://github.com/ba2slk/spring-cgv-22nd/actions/runs/18964949556/job/54159635638#step:4:152)> [builder 6/8] RUN ./gradlew bootJar:
+
+[](https://github.com/ba2slk/spring-cgv-22nd/actions/runs/18964949556/job/54159635638#step:4:153)0.127 Error: Unable to access jarfile /app/gradle/wrapper/gradle-wrapper.jar
+
+...
+
+[](https://github.com/ba2slk/spring-cgv-22nd/actions/runs/18964949556/job/54159635638#step:4:163)ERROR: failed to build: failed to solve: process "/bin/sh -c ./gradlew bootJar" did not complete successfully: exit code: 1
+```
+#### 원인
+: 내 레포지토리의 prod 브랜치로 체크아웃해서 빌드를 수행하는데, .gitignore에서 빌드 과정에 필요한 graddle-wrapper.jar가 함께 무시되어 있어서 Dockerfile에서 COPY 한 결과에 포함되지 않았음
+
+#### 해결
+: .gitignore 파일에 `!gradle/wrapper/gradle-wrapper.jar` 추가
+
+### workflow .yml 
+```
+- name: [1] Build something
+```
+- yml에서 대괄호는 리스트 표기용 예약 구문이기 때문에 name이라도 `[1] ~~` 처럼 사용하면 indentation 오류 발생
+
+### 배포 환경에서 컨테이너가 환경변수를 못 읽음
+#### 상황
+`docker container logs <container name>`으로 컨테이너 내부 로그에서 환경 변수를 읽지 못하는 것과 관련한 에러 발생
+
+#### 해결
+- 결국 다시 .gitignore 문제
+- application.yml 민감 정보를 전부 환경변수로 치환해서 푸쉬 → runner 에서 빌드 
+- 이전에는 application.yml이 빌드 과정에 존재하지 않았기 때문에 DB 관련 환경변수를 읽어들일 수 없었던 것
+
+## 배포 결과
+<img width="1197" height="115" alt="image" src="https://github.com/user-attachments/assets/223b37b9-253f-4b5d-99f5-374fef9a565d" />
+
+<img width="1148" height="289" alt="image" src="https://github.com/user-attachments/assets/cefffaa3-8257-4e50-ac15-3d9ab2416be4" />
+
+
+# 배포 과정 복기
+## AWS
+- 같은 gmail 계정으로 프리티어 개설하기
+	- 기존 gmail 주소에 '+' 트릭: '0730bss+25.3@gmail.com'
+- '기존 고객'이 어디까지 해당하는지
+	- 25.7 이전에 가입한 유저는 legacy free tier 혜택을 받음
+	- 이후에 가입한 유저는 $200 크레딧 + 6개월 + 비용 안 나감
+- swap 메모리 설정
+### EC2
+- pem 보관 잘 하기
+- 사용하지 않을 때는 인스턴스 꼭 꺼두기
+	- 영구 삭제할 경우 Elastic IP도 함께 삭제 확인하기
+- 유동 IP
+	- [ ] Github Actions `AWS_EC2_HOST` 변경
+	- [ ] MobaXterm(putty 같은 클라이언트) Session 재설정
+
+### RDS
+- MySQL
+- 스냅샷, 복구 → 사전에 비활성화 해서 과금 방지하기
+- 인바운드 규칙 설정
+	- 소스
+		- 로컬: 내 IP
+		- EC2: EC2 보안 그룹 ID
+	- DB는 모든 소스(0.0.0.0/0) 허용하면 절대 안 됨.
+
+## Docker
+### Dockerfile
+- 컨테이너 이미지 생성
+- 프로젝트 루트에 Dockerfile 생성
+```Dockerfile
+# Dockerfile
+
+# Stage 1: jar 빌드하기  
+FROM gradle:8.3-jdk17 AS builder  
+  
+WORKDIR /app  
+  
+COPY . .  
+  
+RUN ls -al gradle/wrapper  
+  
+RUN chmod +x gradlew  
+RUN ./gradlew bootJar  
+RUN echo "Checking whether *.jar created..."  
+RUN ls -l build/libs  
+  
+# Stage 2: app 실행  
+FROM openjdk:17-jdk-slim  
+WORKDIR /app  
+  
+EXPOSE 8080  
+  
+COPY --from=builder app/build/libs/*.jar app.jar  
+  
+ENTRYPOINT ["java","-jar","app.jar"]
+```
+- 멀티스테이지 이미지 빌드 가능
+
+### docker-compose.yml
+- 컨테이너 다중 제어
+- 작성 관련
+	- version 명시하지 않는 것이 권장
+	- 환경변수
+		- env_file: .env
+	- 포트
+		- ports: "호스트:컨테이너"
+```yml
+# docker-compose.yml
+services:
+  server:
+    image: "${DOCKER_REGISTRY_URL}/${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+    ports:
+      - "80:8080"
+    env_file:
+      - .env
+    restart: always
+
+```
+
+## Github Actions
+- 프로젝트 루트에 .github/workflows/NAME.yml 생성
+```yml
+name: CI/CD Pipeline with Docker - Push based
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ github.sha }}
+
+    steps:
+      - name: Checkout Source Code
+        # uses: 기존 marketplace 상에 등록된 action 사용하기
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Docker Registry
+        # run: 직접 shell 명령어 실행하기
+        run: echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} --username ${{ secrets.DOCKER_REGISTRY_USER_NAME }} --password-stdin
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+
+  deploy:
+    name: Deploy to EC2 Server
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ORACLE_INSTANCE_HOST }}
+          username: ubuntu
+          key: ${{ secrets.ORACLE_INSTANCE_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.ORACLE_INSTANCE_SSH_PORT }}
+          script: |
+            cd ~
+            
+            echo "Pulling new image..."
+            docker pull ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}
+            
+            echo "Exporting new image tag..."
+            export IMAGE_TAG=${{ needs.build.outputs.image_tag }}
+            echo $IMAGE_TAG
+            
+            # 환경변수 주입
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}
+            export JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
+            export PORTONE_TOKEN=${{ secrets.PORTONE_TOKEN }}
+            export PORTONE_STORE_ID=${{ secrets.PORTONE_STORE_ID }}
+            export PORTONE_HOST=${{ secrets.PORTONE_HOST }}
+            export HIBERNATE_DDL_AUTO=${{ secrets.HIBERNATE_DDL_AUTO }}
+            export DOCKER_REGISTRY_URL=${{ secrets.DOCKER_REGISTRY_URL }}
+            export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
+            export DB_URL=${{ secrets.DB_URL }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            
+            echo "Cloning into 'ba2slk/spring-cgv-22nd' ..."
+            git clone https://github.com/ba2slk/spring-cgv-22nd.git
+            
+            cd ./spring-cgv-22nd
+            pwd
+            
+            echo "Checkout to 'prod'"
+            git switch prod
+            git branch
+            
+            echo "Show docker-compose.yml"
+            ls -al | grep 'docker-compose.yml'
+            
+            echo "Terminating running containers..."
+            docker compose down
+            
+            echo "Running containers..."
+            docker compose up -d
+            
+            echo "Removing cloned repository..."
+            cd ~
+            rm -rf ./spring-cgv-22nd
+            
+            echo "Pruning old images..."
+            docker image prune -f
+            
+            echo "Done. Check container status below."
+            docker ps
+```
+- secret → Settings > secrets and variables → actions
+	- workflow상에서 사용할 환경변수와 일반변수를 구분해서 github에서 통합 관리 가능
+- on
+	- 이벤트 트리거 (push, pr, …)
+- jobs
+	- output = 특정 job의 결과물을 다음 job이 사용할 수 있도록 해줌
+	- needs = job 의존성 명시
+	- runs-on = ubuntu-latest 또는 self-hosted (실행 환경)
+	- steps
+		- 각각의 job은 여러 step으로 구분
+			- - name: 무슨 단계인지
+				- uses: marketplace에 있는 action 사용 (repo/action이름@버전)
+					- actions/checkout@v4 : Github 레포지토리 체크아웃
+					- appleboy/ssh-action@v1.2.0: SSH 연결 (위 스크립트에서는 docker-compose에 사용)
+				- run: shell 커맨드 입력
+- Githuc Action 구성 Workflow 도식화
+<img width="1191" height="682" alt="image" src="https://github.com/user-attachments/assets/96488f83-7e71-4466-b9a8-5c589a1298d2" />
+
+
+## 배포 흐름 도식화
+<img width="1668" height="444" alt="image" src="https://github.com/user-attachments/assets/78d5cf6c-b2a9-4ecb-bd38-9db47edbe296" />
+
+## 부하 테스트
+### 부하 제공 환경
+- 로컬 머신에서 `k6 run` 수행
+- 리모트 서버(`144.24.71.208:7777/api/movies`) 대상
+### 부하 테스트 시나리오
+- 총 테스트 시간: 5m
+- vus: 100
+- 세 개의 스테이지로 나누어 각 단계에서의 성능 확인 시도
+```javascript
+import http from "k6/http";  
+import { sleep } from "k6";  
+  
+export const options = {  
+    stages: [
+	    // (!) 1분 간 100명에 도달하도록 사용자를 서서히 증가  
+        { duration: "1m", target: 100 },
+          
+		// (2) 3분 동안 100 명의 사용자 유지
+        { duration: "3m", target: 100 },  
+  
+		// (3) 1분 동안 사용자를 서서히 감소
+        { duration: "1m", target: 0 },  
+    ],  
+};  
+  
+export default function () {  
+    http.get("http://144.24.71.208:7777/api/movies");  
+    sleep(1);  
+}
+```
+
+### 결과
+1. HTTP Performance overview
+<img width="2779" height="653" alt="image" src="https://github.com/user-attachments/assets/c979be35-2c11-44f6-950c-8e0431f831ad" />
+- 초반 19:57:30 ~ 19:58:10
+    - 요청 수가 증가함에 따라 응답 시간도 비례해서 증가
+- 중반 19:58:15 ~ 19:58:45
+    - Request Duration이 갑자기 크게 튀어오름
+    - 하지만 Request Rate는 계속 증가하기 때문에 서버가 요청을 즉시 처리하지 못하고 대기 큐가 쌓이는 상황으로 병목 지점으로 판단 가능
+- 후반 (19:59:00 이후)
+    - Request Duration이 다시 떨어지고 안정되는 모습
+
+1. VUs
+<img width="1375" height="644" alt="image" src="https://github.com/user-attachments/assets/f3928090-d88f-4ce0-80c0-392fc969d601" />
+- 19:58:10 ~ 19:58:30 사이에서 VU가 증가하지만 Request rate가 증가하지 않기 때문에 해당 지점에서 병목이 발생했다고 볼 수 있음.
+
+# 모니터링
+하지만 병목 원인이 애플리케이션인지 확실히 모르기 때문에 모니터링 지표를 함께 보기 위해 컨테이너를 추가로 구성함.
+## Grafana + Loki
+### docker-compose.yml
+```yml
+services:  
+  server:  
+    ports:  
+    - "7777:8080"  
+    image: "${DOCKER_REGISTRY_URL}/${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"  
+    environment:  
+      - DB_URL=${DB_URL}  
+      - DB_USERNAME=${DB_USERNAME}  
+      - DB_PASSWORD=${DB_PASSWORD}  
+      - HIBERNATE_DDL_AUTO=${HIBERNATE_DDL_AUTO}  
+  
+      - JWT_SECRET=${JWT_SECRET}  
+      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}  
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}  
+  
+      - PORTONE_TOKEN=${PORTONE_TOKEN}  
+      - PORTONE_STORE_ID=${PORTONE_STORE_ID}  
+      - PORTONE_HOST=${PORTONE_HOST}  
+    networks:  
+      - monitoring-net  
+  
+  prometheus:  
+    image: prom/prometheus:latest  
+    container_name: prometheus-container  
+    ports:  
+      - "9090:9090"  
+    volumes:  
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml  
+    networks:  
+      - monitoring-net  
+  
+  grafana:  
+    image: grafana/grafana:latest  
+    container_name: grafana-container  
+    ports:  
+      - "3000:3000"  
+    volumes:  
+      - grafana-storage:/var/lib/grafana  
+    networks:  
+      - monitoring-net  
+    depends_on:  
+      - prometheus  
+  
+networks:  
+  monitoring-net:  
+    driver: bridge  
+  
+volumes:  
+  grafana-storage:
+```
+### 통신 흐름 도식화
+<img width="1401" height="983" alt="image" src="https://github.com/user-attachments/assets/308776e8-e5b9-4632-b192-086c96cebca9" />
+→ grafana 서버는 추후 ingress 설정을 통해 public에서 접근 불가능하도록 변경할 예정
+
+### 모니터링 지표: JVM
+
+1. CPU 사용량
+<img width="672" height="401" alt="image" src="https://github.com/user-attachments/assets/b6a10d1c-392f-4b6a-9667-f35b269cf9f8" />
+
+- CPU 사용량 **100 퍼센트** 달성
+
+2. Load
+<img width="682" height="401" alt="image" src="https://github.com/user-attachments/assets/ce292732-cd40-4998-bcf1-166f276605b3" />
+
+- 초록색: Load Average (=1분 평균 시스템 로드)
+- 노란색: CPU 코어 개수
+- 정상 기준: Load Average ≤ CPU 코어 수
+→ 하지만 위에서 병목 지점이라고 판단했던 시간 대에 **CPU가 감당할 수 있는 처리량의 약 6배 만큼의 작업이 동시에 실행되고 있음**을 알 수 있음.
+
+3. Memory
+<img width="682" height="430" alt="image" src="https://github.com/user-attachments/assets/d699cd12-2eb4-4ccb-b0db-871d806fcced" />
+
+- 메모리는 기본 1GB + 2GB 스왑 메모리 = 총 3GB 수준임을 고려하면 무리가 가지 않은 것 같음.
+
+
+### 결론
+OCI 인스턴스에서 병목이 발생하고 있다는 것을 성능 지표를 통해 한 번 더 확인할 수 있었다.
+>>>>>>> deb8ec0 (docs: 부하 테스트 README.md 작성)
